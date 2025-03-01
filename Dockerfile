@@ -1,4 +1,4 @@
-FROM nginx:alpine
+FROM nginx:stable-alpine
 LABEL maintainer="Paschoal Diniz <aiservers.brasil@gmail.com>"
 
 COPY website /website
