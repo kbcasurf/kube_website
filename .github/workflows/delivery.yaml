@@ -61,7 +61,7 @@ jobs:
         
       - name: Building
         run: |
-          docker build --push -t ${{ secrets.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/free-kubernetes-nginx:latest app/.
+          docker build --push -t ${{ secrets.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/axtfvxixy3a6/aiservers/website_kube:v3 appllication/.
       - name: Deploying to Kubernetes
         run: |
           sed -i 's/<OCI_OBJECT_STORAGE_NAMESPACE>/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/g' application/site-deploy.yaml
