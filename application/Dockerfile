@@ -1,4 +1,4 @@
-FROM nginx:stable-alpine
+FROM --platform=linux/arm64 nginx:stable-alpine
 LABEL maintainer="Paschoal Diniz <aiservers.brasil@gmail.com>"
 
 COPY website /website

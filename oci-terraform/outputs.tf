@@ -1,4 +1,4 @@
-output "kube-cluster-id" {
+output "kube_cluster_id" {
   value = oci_containerengine_cluster.kube_cluster.id
 }
 
