@@ -54,7 +54,7 @@ jobs:
         with:
           registry: ${{ secrets.OCI_REGISTRY_URL }}
           username: ${{ secrets.OCI_REGISTRY_USERNAME }}
-          password: ${{ secrets.OCI_REGISTRY_PASSWORD }}
+          password: ${{ secrets.OCI_KEY_FILE }}
           
       - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
