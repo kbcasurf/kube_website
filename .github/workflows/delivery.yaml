@@ -12,13 +12,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 'Checkout'
         uses: actions/checkout@v2
 
-      - name: Set up QEMU
+      - name: 'Set up QEMU'
         uses: docker/setup-qemu-action@v1
 
-      - name: Set up Docker Buildx
+      - name: 'Set up Docker Buildx'
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
@@ -37,8 +37,8 @@ jobs:
           oci setup repair-file-permissions --file /home/runner/.oci/config
           oci setup repair-file-permissions --file /home/runner/.oci/oci_pass.pem
 
-      - name: Check Kubeconfig file
-        run: echo $KUBECONFIG
+      - name: 'Check Kubeconfig file'
+        run: echo "${{ secrets.KUBECONFIG }}"
           
       - name: 'Installation kubectl'
         run: |
@@ -48,6 +48,9 @@ jobs:
           mv kubectl /usr/local/bin
           echo "${{ secrets.KUBECONFIG }}" > /tmp/.kube/config
           echo "KUBECONFIG=/tmp/.kube/config" >> $GITHUB_ENV
+
+      - name: 'Check Kubeconfig copy'
+        run: cat KUBECONFIG=/tmp/.kube/config
           
       - name: 'Currently running services'
         run: kubectl -n kube-ns get pods
@@ -59,16 +62,18 @@ jobs:
           username: ${{ secrets.OCI_REGISTRY_USERNAME }}
           password: ${{ secrets.OCI_KEY_FILE }}
           
-      - name: Available platforms
+      - name: 'Available platforms'
         run: echo ${{ steps.buildx.outputs.platforms }}
         
-      - name: Building
+      - name: 'Building'
         run: |
           docker build --push -t ${{ secrets.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/axtfvxixy3a6/aiservers/website_kube:v3 appllication/.
-      - name: Deploying to Kubernetes
+      
+      - name: 'Deploying to Kubernetes'
         run: |
           sed -i 's/<OCI_OBJECT_STORAGE_NAMESPACE>/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/g' application/site-deploy.yaml
           kubectl -n kube-ns apply -f application/site-deploy.yaml
-      - name: Restarting application
+      
+      - name: 'Restarting application'
         run: |
           kubectl -n kube-ns rollout restart deployment website-kube
