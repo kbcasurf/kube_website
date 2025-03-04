@@ -12,7 +12,7 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path = "~/.kube/kube-config"
+  config_path = "~/.kube/config"
 }
 
 provider "oci" {
@@ -21,18 +21,60 @@ provider "oci" {
 
 resource "kubernetes_namespace" "free_namespace" {
   metadata {
-    name = "ns"
+    name = "kube-ns"
   }
 }
 
-resource "kubernetes_service" "nginx_service" {
+resource "kubernetes_deployment" "website_kube" {
   metadata {
-    name      = "nginx-service"
+    name = "website-kube"
+    labels = {
+      app = "website-kube"
+    }
+    namespace = kubernetes_namespace.free_namespace.id
+  }
+
+  spec {
+    replicas = 2
+
+    selector {
+      match_labels = {
+        app = "website-kube"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "website-kube"
+        }
+      }
+
+      spec {
+        image_pull_secrets {
+          name = "oci-registry-secret"
+        }
+        container {
+          image = "vcp.ocir.io/axtfvxixy3a6/aiservers/website_kube:v3"
+          name  = "website-kube"
+          port {
+            container_port = 80
+          }
+        }
+      }
+    }
+  }
+}
+
+
+resource "kubernetes_service" "website_kube_service" {
+  metadata {
+    name      = "website-kube-service"
     namespace = kubernetes_namespace.free_namespace.id
   }
   spec {
     selector = {
-      app = "nginx"
+      app = "website-kube"
     }
     port {
       port        = 80

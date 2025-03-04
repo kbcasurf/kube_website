@@ -220,7 +220,7 @@ resource "oci_containerengine_node_pool" "kube_node_pool" {
 
       }
     }
-    size = 2
+    size = 4
 
   }
   node_shape = "VM.Standard.A1.Flex"

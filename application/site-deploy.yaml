@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website-kube
+  labels:
+    app: website-kube
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: website-kube
+  template:
+    metadata:
+      labels:
+        app: website-kube
+    spec:
+      containers:
+        - name: website-kube
+          image: vcp.ocir.io/axtfvxixy3a6/aiservers/website_kube:v2
+          ports:
+            - containerPort: 80
+      imagePullSecrets:
+      - name: oci-registry-secret
