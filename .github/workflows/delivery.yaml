@@ -40,12 +40,12 @@ jobs:
           
       - name: 'Installation kubectl'
         run: |
-          mkdir /tmp/.kube
+          mkdir ~/.kube
           curl -L -O "https://dl.k8s.io/release/v1.22.4/bin/linux/amd64/kubectl" -o kubectl
           chmod +x kubectl
           mv kubectl /usr/local/bin
-          echo "${{ secrets.KUBE_CONFIG }}" > /tmp/.kube/config
-          echo "KUBE_CONFIG=/tmp/.kube/config" >> $GITHUB_ENV
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          echo "KUBE_CONFIG=~/.kube/config" >> $GITHUB_ENV
        
 #      - name: 'Currently running services'
 #        run: kubectl -n kube-ns get pods
@@ -62,7 +62,7 @@ jobs:
         
       - name: 'Building'
         run: |
-          docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/axtfvxixy3a6/aiservers/website_kube:v3 appllication/.
+          docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
       
       - name: 'Deploying to Kubernetes'
         run: |
