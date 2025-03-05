@@ -47,8 +47,8 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" > /tmp/.kube/config
           echo "KUBE_CONFIG=/tmp/.kube/config" >> $GITHUB_ENV
        
-      - name: 'Currently running services'
-        run: kubectl -n kube-ns get pods
+#      - name: 'Currently running services'
+#        run: kubectl -n kube-ns get pods
         
       - name: Login to OCI images registry
         uses: docker/login-action@v1
