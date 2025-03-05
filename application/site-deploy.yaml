@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: website-kube
-          image: ${{vars.DOCKER_IMAGE}}
+          image: "$vars.DOCKER_IMAGE"
           ports:
             - containerPort: 80
       imagePullSecrets:
-      - name: ${{secrets.DOCKER_PASSWORD}}
+      - name: "$secrets.DOCKER_PASSWORD"
