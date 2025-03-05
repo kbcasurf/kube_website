@@ -50,7 +50,7 @@ jobs:
         run: kubectl -n kube-ns get pods
         
       - name: 'Login to Docker registry'
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ${{ secrets.DOCKER_URL }}
           username: ${{ secrets.DOCKER_USERNAME }}
