@@ -54,9 +54,9 @@ jobs:
         uses: oracle-actions/login-ocir@v1.3.0
         id: login-ocir
         with:
-          registry: ${{ env.OCI_REGISTRY_URL }}
-          username: ${{ secrets.OCI_REGISTRY_USERNAME }}
-          password: ${{ secrets.OCI_REGISTRY_PASS }}
+          OCI_CLI_REGION: ${{ env.OCI_CLI_REGION }}
+          OCI_CLI_USER: ${{ secrets.OCI_REGISTRY_USERNAME }}
+          auth_token: ${{ secrets.OCI_REGISTRY_PASS }}
           
       - name: 'Available platforms'
         run: echo ${{ steps.buildx.outputs.platforms }}
