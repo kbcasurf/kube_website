@@ -11,81 +11,63 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      OCI_CLI_USER: ${{ secrets.OCI_REGISTRY_USERNAME }}
-      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
-#      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
-#      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
-      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
-      
     steps:
-      - name: 'Checkout'
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: 'Set up QEMU'
+      - name: 'Setting up QEMU environment'
         uses: docker/setup-qemu-action@v1
 
-      - name: 'Set up Docker Buildx'
+      - name: 'Setting up Docker Buildx'
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
           install: true
 
-      - name: 'Installation OCI CLI'          
+      - name: 'Installation Oracle Cloud CLI'
         run: |
           mkdir ~/.oci
           echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
-          echo "${{ secrets.OCI_PASS }}" > ~/.oci/oci_pass.pem
+          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/key.pem
           curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
           chmod +x install.sh
           ./install.sh --accept-all-defaults
-          echo "/home/runner/bin" >> $GITHUB_PATH
+          echo "~/bin" >> $GITHUB_PATH
           exec -l $SHELL
           oci setup repair-file-permissions --file ~/.oci/config
           oci setup repair-file-permissions --file ~/.oci/oci_pass.pem
-          
+
       - name: 'Installation kubectl'
         run: |
           mkdir ~/.kube
-          curl -L -O "https://dl.k8s.io/release/v1.31.1/bin/linux/amd64/kubectl" -o kubectl
+          curl -L -O "https://dl.k8s.io/release/v1.22.4/bin/linux/amd64/kubectl" -o kubectl
           chmod +x kubectl
           mv kubectl /usr/local/bin
-          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
-          echo "KUBE_CONFIG=~/.kube/config" >> $GITHUB_ENV
-                
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          echo "KUBECONFIG=~/.kube/config" >> $GITHUB_ENV
+
       - name: 'Currently running services'
         run: kubectl -n kube-ns get pods
-      
-      - name: Get or create an Oracle Registry
-        uses: oracle-actions/get-ocir-repository@v1.3.0
-        id: get-ocir-repository
-        with:
-          name: oraclelinux
-          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}        
         
-      - name: Login into Oracle Registry 
-        uses: oracle-actions/login-ocir@v1.3.0
-        id: login-ocir
+      - name: 'Login to Docker registry'
+        uses: docker/login-action@v1
         with:
-          auth_token: ${{ secrets.OCI_REGISTRY_PASS }}
+          registry: ${{ secrets.DOCKER_URL }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Tag and push a container image
-        id: tag-and-push-image
+      - name: 'Available platforms'
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      
+      - name: 'Building image'
         run: |
-          docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
-          docker tag "${{ steps.get-ocir-repository.outputs.repo_path }}:v3"
-          docker push "${{ steps.get-ocir-repository.outputs.repo_path }}:v3"
-          
-#      - name: 'Available platforms'
-#        run: echo ${{ steps.buildx.outputs.platforms }}
-        
-#      - name: 'Building'
-#        run: docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
+          docker build --push --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKER_URL }}/${{ secrets.DOCKER_OBJECT_STORAGE_NAMESPACE }}/${{ secrets.DOCKER_IMAGE }} appllication/.
       
       - name: 'Deploying to Kubernetes'
         run: |
-          sed -i 's/<OCI_OBJECT_STORAGE_NAMESPACE>/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/g' application/site-deploy.yaml
+          sed -i 's/<DOCKER_OBJECT_STORAGE_NAMESPACE>/${{ secrets.DOCKER_OBJECT_STORAGE_NAMESPACE }}/g' application/site-deploy.yaml
           kubectl -n kube-ns apply -f application/site-deploy.yaml
       
       - name: 'Restarting application'
-        run: kubectl -n kube-ns rollout restart deployment website-kube
+        run: |
+          kubectl -n kube-ns rollout restart deployment website-kube
