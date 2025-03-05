@@ -26,16 +26,16 @@ jobs:
 
       - name: 'Installation Oracle Cloud CLI'
         run: |
-          mkdir ~/.oci
-          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
-          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/key.pem
+          mkdir /home/runner/.oci
+          echo "${{ secrets.OCI_CONFIG }}" > /home/runner/.oci/config
+          echo "${{ secrets.OCI_KEY_FILE }}" > /home/runner/.oci/key_file.pem
           curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
           chmod +x install.sh
           ./install.sh --accept-all-defaults
-          echo "~/bin" >> $GITHUB_PATH
+          echo "/home/runner/oci/bin" >> $GITHUB_PATH
           exec -l $SHELL
-          oci setup repair-file-permissions --file ~/.oci/config
-          oci setup repair-file-permissions --file ~/.oci/oci_pass.pem
+          oci setup repair-file-permissions --file /home/runner/.oci/config
+          oci setup repair-file-permissions --file /home/runner/.oci/key_file.pem
 
       - name: 'Installation kubectl'
         run: |
