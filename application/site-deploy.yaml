@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: website-kube
-          image: "$vars.DOCKER_IMAGE"
+          image: vcp.ocir.io/aiservers/website_kube:v3
           ports:
             - containerPort: 80
       imagePullSecrets:
-      - name: "$secrets.DOCKER_PASSWORD"
+      - name: oci-registry-secret
