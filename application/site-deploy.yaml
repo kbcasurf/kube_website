@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: website-kube
-          image: vcp.ocir.io/axtfvxixy3a6/aiservers/website_kube:v2
+          image: ${{env.OCI_IMAGE_VERSION}}
           ports:
             - containerPort: 80
       imagePullSecrets:
-      - name: oci-registry-secret
+      - name: ${{secret.OCI_REGISTRY_SECRET}}
