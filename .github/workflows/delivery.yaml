@@ -28,23 +28,23 @@ jobs:
         run: |
           mkdir ~/.oci
           echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
-          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/key_file.pem
+          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/key.pem
           curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
           chmod +x install.sh
           ./install.sh --accept-all-defaults
-          echo "~/oci/bin" >> $GITHUB_PATH
+          echo "/home/runner/oci/bin" >> $GITHUB_PATH
           exec -l $SHELL
-          oci setup repair-file-permissions --file ~/.oci/config
-          oci setup repair-file-permissions --file ~/.oci/key_file.pem
+          oci setup repair-file-permissions --file /home/runner/.oci/config
+          oci setup repair-file-permissions --file /home/runner/.oci/key.pem
 
       - name: 'Installation kubectl'
         run: |
-          mkdir ~/.kube
+          mkdir /tmp/.kube
           curl -L -O "https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl" -o kubectl
           chmod +x kubectl
           mv kubectl /usr/local/bin
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          echo "KUBECONFIG=~/.kube/config" >> $GITHUB_ENV
+          echo "${{ secrets.KUBECONFIG }}" > /tmp/.kube/config
+          echo "KUBECONFIG=/tmp/.kube/config" >> $GITHUB_ENV
 
       - name: 'Currently running services'
         run: kubectl -n kube-ns get pods
