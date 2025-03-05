@@ -34,8 +34,8 @@ jobs:
           ./install.sh --accept-all-defaults
           echo "/home/runner/bin" >> $GITHUB_PATH
           exec -l $SHELL
-          oci setup repair-file-permissions --file /home/runner/.oci/config
-          oci setup repair-file-permissions --file /home/runner/.oci/oci_pass.pem
+          chmod 644 /home/runner/.oci/config
+          chmod 600 /home/runner/.oci/oci_pass.pem
 
       - name: 'Installation kubectl'
         run: |
