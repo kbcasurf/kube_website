@@ -61,7 +61,7 @@ jobs:
       
       - name: 'Building image'
         run: |
-          docker build --push --platform linux/arm64 -t ${{ vars.DOCKER_IMAGE }}:v3 application/.
+          docker build --push --platform linux/arm64 -t ${{ vars.DOCKER_IMAGE }} application/.
       
       - name: 'Deploying to Kubernetes'
         run: |
