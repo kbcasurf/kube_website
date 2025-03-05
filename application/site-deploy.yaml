@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: website-kube
-          image: ${{env.OCI_IMAGE_VERSION}}
+          image: ${{vars.DOCKER_IMAGE}}
           ports:
             - containerPort: 80
       imagePullSecrets:
-      - name: ${{secret.OCI_REGISTRY_SECRET}}
+      - name: ${{secrets.DOCKER_PASSWORD}}
