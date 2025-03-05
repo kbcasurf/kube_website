@@ -16,7 +16,8 @@ jobs:
       OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
 #      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
 #      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
-      OCI_CLI_REGION: ${{ env.OCI_CLI_REGION }}
+      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+      
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
@@ -67,12 +68,19 @@ jobs:
         id: login-ocir
         with:
           auth_token: ${{ secrets.OCI_REGISTRY_PASS }}
+
+      - name: Tag and push a container image
+        id: tag-and-push-image
+        run: |
+          docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
+          docker tag "${{ steps.get-ocir-repository.outputs.repo_path }}:v3"
+          docker push "${{ steps.get-ocir-repository.outputs.repo_path }}:v3"
           
-      - name: 'Available platforms'
-        run: echo ${{ steps.buildx.outputs.platforms }}
+#      - name: 'Available platforms'
+#        run: echo ${{ steps.buildx.outputs.platforms }}
         
-      - name: 'Building'
-        run: docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
+#      - name: 'Building'
+#        run: docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
       
       - name: 'Deploying to Kubernetes'
         run: |
