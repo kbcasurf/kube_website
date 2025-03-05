@@ -25,23 +25,23 @@ jobs:
         with:
           install: true
 
-      - name: 'Installation OCI CLI'
+      - name: 'Installation OCI CLI'          
         run: |
           mkdir ~/.oci
-          echo "$OCI_CONFIG" > ~/.oci/config
-          echo "$OCI_PASS" > ~/.oci/oci_pass.pem
+          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+          echo "${{ secrets.OCI_PASS }}" > ~/.oci/oci_pass.pem
           curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
           chmod +x install.sh
           ./install.sh --accept-all-defaults
           echo "/home/runner/bin" >> $GITHUB_PATH
           exec -l $SHELL
-          oci setup repair-file-permissions --file /home/runner/.oci/config
-          oci setup repair-file-permissions --file /home/runner/.oci/oci_pass.pem
+          oci setup repair-file-permissions --file ~/.oci/config
+          oci setup repair-file-permissions --file ~/.oci/oci_pass.pem
           
       - name: 'Installation kubectl'
         run: |
           mkdir ~/.kube
-          curl -L -O "https://dl.k8s.io/release/v1.22.4/bin/linux/amd64/kubectl" -o kubectl
+          curl -L -O "https://dl.k8s.io/release/v1.31.1/bin/linux/amd64/kubectl" -o kubectl
           chmod +x kubectl
           mv kubectl /usr/local/bin
           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
@@ -61,8 +61,7 @@ jobs:
         run: echo ${{ steps.buildx.outputs.platforms }}
         
       - name: 'Building'
-        run: |
-          docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
+        run: docker build --push -t ${{ env.OCI_REGISTRY_URL }}/${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}/${{ env.OCI_IMAGE_VERSION }} appllication/.
       
       - name: 'Deploying to Kubernetes'
         run: |
@@ -70,5 +69,4 @@ jobs:
           kubectl -n kube-ns apply -f application/site-deploy.yaml
       
       - name: 'Restarting application'
-        run: |
-          kubectl -n kube-ns rollout restart deployment website-kube
+        run: kubectl -n kube-ns rollout restart deployment website-kube
