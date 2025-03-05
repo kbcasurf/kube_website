@@ -11,7 +11,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_REGISTRY_USERNAME }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+#      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+#      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+      OCI_CLI_REGION: ${{ env.OCI_CLI_REGION }}
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
@@ -49,7 +54,7 @@ jobs:
                 
       - name: 'Currently running services'
         run: kubectl -n kube-ns get pods
-
+      
       - name: Get or create an Oracle Registry
         uses: oracle-actions/get-ocir-repository@v1.3.0
         id: get-ocir-repository
