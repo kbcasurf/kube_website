@@ -61,7 +61,7 @@ jobs:
         id: get-ocir-repository
         with:
           name: oraclelinux
-          compartment: ${{ env.OCI_COMPARTMENT_OCID }}        
+          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}        
         
       - name: Login into Oracle Registry 
         uses: oracle-actions/login-ocir@v1.3.0
