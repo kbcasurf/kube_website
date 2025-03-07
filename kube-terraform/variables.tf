@@ -17,3 +17,8 @@ variable "node_pool_id" {
   type = string
   description = "The OCID of the Node Pool where the compute instances reside"
 }
+
+variable "ssh_public_key" {
+  type        = string
+  description = "The SSH public key to use for connecting to the worker nodes"
+}
