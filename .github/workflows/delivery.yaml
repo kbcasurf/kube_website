@@ -1,0 +1,73 @@
+name: Application Deploy on OCI Cluster
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - application/**
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: 'Setting up QEMU environment'
+        uses: docker/setup-qemu-action@v1
+
+      - name: 'Setting up Docker Buildx'
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          install: true
+
+      - name: 'Installation Oracle Cloud CLI'
+        run: |
+          mkdir ~/.oci
+          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+          echo "${{ secrets.OCI_KEY_FILE }}" > ~/.oci/oci_pass.pem
+          curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
+          chmod +x install.sh
+          ./install.sh --accept-all-defaults
+          echo "/home/runner/bin" >> $GITHUB_PATH
+          exec -l $SHELL
+          chmod 644 /home/runner/.oci/config
+          chmod 600 /home/runner/.oci/oci_pass.pem
+
+      - name: 'Installation kubectl'
+        run: |
+          mkdir /tmp/.kube
+          curl -L -O "https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl" -o kubectl
+          chmod +x kubectl
+          mv kubectl /usr/local/bin
+          echo "${{ secrets.KUBECONFIG }}" > /tmp/.kube/config
+          echo "KUBECONFIG=/tmp/.kube/config" >> $GITHUB_ENV
+
+      - name: 'Currently running services'
+        run: kubectl -n kube-ns get pods
+        
+      - name: 'Login to Docker registry'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.OCIR_URL }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 'Available platforms'
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      
+      - name: 'Building image'
+        run: |
+          docker build --push --platform linux/arm64 -t ${{ vars.DOCKER_IMAGE }} application/.
+      
+      - name: 'Deploying to Kubernetes'
+        run: |
+          sed -i 's/<DOCKER_OBJECT_STORAGE_NAMESPACE>/${{ secrets.DOCKER_OBJECT_STORAGE_NAMESPACE }}/g' application/site-deploy.yaml
+          kubectl -n kube-ns apply -f application/site-deploy.yaml
+      
+      - name: 'Restarting application'
+        run: |
+          kubectl -n kube-ns rollout restart deployment website-kube
