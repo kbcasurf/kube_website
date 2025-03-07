@@ -19,6 +19,63 @@ provider "oci" {
   region = var.region
 }
 
+data "oci_core_images" "latest_image" {
+  compartment_id = var.compartment_id
+  operating_system = "Oracle Linux"
+  operating_system_version = "8"
+  filter {
+    name   = "display_name"
+    values = ["^.*aarch64-.*$"]
+    regex = true
+  }
+}
+
+resource "oci_containerengine_node_pool" "kube_node_pool" {
+  cluster_id         = oci_containerengine_cluster.kube_cluster.id
+  compartment_id     = var.compartment_id
+  kubernetes_version = "v1.31.1"
+  name               = "kube-node-pool"
+
+  node_config_details {
+    dynamic placement_configs {
+      for_each = local.azs
+      content {
+        availability_domain = placement_configs.value
+        subnet_id           = oci_core_subnet.vcn_private_subnet.id
+
+      }
+    }
+    size = 4
+
+  }
+  node_shape = "VM.Standard.A1.Flex"
+
+  node_shape_config {
+    memory_in_gbs = 6
+    ocpus         = 1
+  }
+
+  node_source_details {
+    image_id    = data.oci_core_images.latest_image.images.0.id
+    source_type = "image"
+  }
+
+  initial_node_labels {
+    key   = "name"
+    value = "kube-cluster"
+  }
+
+  ssh_public_key = var.ssh_public_key
+}
+
+resource "oci_artifacts_container_repository" "docker_repository" {
+  compartment_id = var.compartment_id
+  display_name   = "kube-website"
+
+  is_immutable = false
+  is_public    = false
+}
+
 resource "kubernetes_namespace" "free_namespace" {
   metadata {
     name = "kube-ns"
@@ -129,4 +186,12 @@ resource "oci_network_load_balancer_listener" "free_nlb_listener" {
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.free_nlb.id
   port                     = "80"
   protocol                 = "TCP"
+}
+
+data "oci_identity_availability_domains" "ads" {
+  compartment_id = var.compartment_id
+}
+locals {
+  # Gather a list of availability domains for use in configuring placement_configs
+  azs = data.oci_identity_availability_domains.ads.availability_domains[*].name
 }
